@@ -7,15 +7,21 @@
 <h2>Index</h2>
 
 <div class="row">
-    <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+    <div class="btn-toolbar mb-3 gap-2" role="toolbar" aria-label="Toolbar with button groups">
         <div class="input-group">
-            <input type="text" id="inputTextServer" class="form-control" placeholder="..." aria-label="Input group example" aria-describedby="btnGroupAddon">
+            <input type="text" id="inputTextServerJquery" class="form-control" placeholder="Using Jquery" aria-label="Input group example" aria-describedby="btnGroupAddon">
             <div class="input-group-text" id="btnGroupAddon">
-                <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnServer()">Filter Server</button>
+                <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnServerJquery()">Filter Server</button>
             </div>
         </div>
         <div class="input-group">
-            <input type="text" id="inputTextClient" class="form-control" placeholder="..." aria-label="Input group example" aria-describedby="btnGroupAddon">
+            <input type="text" id="inputTextServerFetch" class="form-control" placeholder="Using Fetch" aria-label="Input group example" aria-describedby="btnGroupAddon">
+            <div class="input-group-text" id="btnGroupAddon">
+                <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnServerFetch()">Filter Server</button>
+            </div>
+        </div>
+        <div class="input-group">
+            <input type="text" id="inputTextClient" class="form-control" placeholder="From Client" aria-label="Input group example" aria-describedby="btnGroupAddon">
             <div class="input-group-text" id="btnGroupAddon">
                 <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnClient()">Filter Client</button>
             </div>
@@ -70,11 +76,11 @@
 </table>
 
 <script>
-    function FilterOnServer() {
+    function FilterOnServerJquery() {
         $.ajax({
             type: "GET",
             url: '@Url.Action("FilterDescription", "Products")',
-            data: { description: $('#inputTextServer').val() },
+            data: { description: $('#inputTextServerJquery').val() },
             success: (response) => {
                 debugger;
                 $('#productTable tbody').empty();
@@ -86,7 +92,7 @@
                                 <td>${product.ProductName || 'N/A'}</td>
                                 <td>${product.Description || 'N/A'}</td>
                                 <td>${product.Rating || 'N/A'}</td>
-                                <td>${product.LastModified || 'N/A'}</td>
+                                <td>${product.LastModified ? formatDotNetDate(product.LastModified) : 'N/A'}</td>
                                 <td>${product.ModifiedBy || 'N/A'}</td>
                                 <td>${product.Category ? product.Category.CategoryName : 'N/A'}</td>
                                 <td>${product.Inventory ? product.Inventory.ModifiedBy : 'N/A'}</td>
@@ -111,6 +117,52 @@
         });
     }
 
+    function FilterOnServerFetch() {
+        const description = document.getElementById('inputTextServerFetch').value;
+
+        fetch(`/Products/FilterDescription?description=${encodeURIComponent(description)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.querySelector('#productTable tbody');
+                tbody.innerHTML = '';
+
+                if (data[0] !== undefined) {
+                    data.forEach(product => {
+                        const row = `
+                        <tr>
+                            <td hidden>${product.ProductID || 'N/A'}</td>
+                            <td>${product.ProductName || 'N/A'}</td>
+                            <td>${product.Description || 'N/A'}</td>
+                            <td>${product.Rating || 'N/A'}</td>
+                            <td>${product.LastModified ? formatDotNetDate(product.LastModified) : 'N/A'}</td>
+                            <td>${product.ModifiedBy || 'N/A'}</td>
+                            <td>${product.Category ? product.Category.CategoryName : 'N/A'}</td>
+                            <td>${product.Inventory ? product.Inventory.ModifiedBy : 'N/A'}</td>
+                            <td>${product.Supplier ? product.Supplier.SupplierName : 'N/A'}</td>
+                            <td>
+                                <a href="/Products/Edit/${product.ProductID}">Edit</a> |
+                                <a href="/Products/Details/${product.ProductID}">Details</a> |
+                                <a href="/Products/Delete/${product.ProductID}">Delete</a>
+                            </td>
+                        </tr>
+                    `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+                } else {
+                    const row = `<tr><td colspan="10" class="text-center">No products found</td></tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+            });
+    }
+
     function FilterOnClient() {
         const input = document.getElementById('inputTextClient');
         const filter = input.value.toLowerCase();
@@ -124,33 +176,39 @@
                 const descriptionText = descriptionCell.textContent || descriptionCell.innerText;
 
                 if (descriptionText.toLowerCase().indexOf(filter) > -1) {
-                    rows[i].style.display = ''; 
+                    rows[i].style.display = '';
                 } else {
-                    rows[i].style.display = 'none'; 
+                    rows[i].style.display = 'none';
                 }
             }
-        }  
+        }
     }
 
     document.getElementById('saveChange').addEventListener('click',() => {
         const table = document.getElementById('productTable');
         const rows = table.getElementsByTagName('tr');
         const modifiedRows = [];
-       
+
         for (let i = 1; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
             if (cells.length > 0) {
                 const productID = cells[0].textContent.trim();
                 const productName = cells[1].textContent.trim();
-                const description = cells[2].textContent.trim();
-                const price = cells[3].textContent.trim();
-              
+                const description = cells[2].textContent.trim();             
+                const rating = cells[3].textContent.trim();
+                const categoryID = cells[6].textContent.trim();
+                const inventoryID = cells[7].textContent.trim();
+                const supplierID = cells[8].textContent.trim();
+
                 if (description !== cells[1].getAttribute('data-original')) {
                     modifiedRows.push({
                         ProductID: productID,
-                        productName: productName,
-                        description: description,
-                        price: price
+                        ProductName: productName,
+                        Description: description,
+                        Rating: rating,
+                        CategoryID: categoryID,
+                        InventoryID: inventoryID,
+                        SupplierID: supplierID
                     });
                 }
             }
@@ -159,7 +217,7 @@
         if (modifiedRows.length > 0) {
             saveChanges(modifiedRows);
         } else {
-            alert('No se detectaron cambios.');
+            alert('No changes detected.');
         }
     });
 
@@ -175,6 +233,23 @@
         .catch(error => {
             console.error('Error:', error);
         });
+    }
+
+    function formatDotNetDate(dotNetDateString) {
+        const match = /\/Date\((\d+)\)\//.exec(dotNetDateString);
+        if (!match)
+            return 'Invalid Date';
+
+        const timestamp = parseInt(match[1]);
+        const date = new Date(timestamp);
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
     }
 </script>
 
