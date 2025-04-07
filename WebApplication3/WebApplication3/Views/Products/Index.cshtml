@@ -1,0 +1,180 @@
+﻿@model IEnumerable<AdvancedProgramming.Data.Product>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<div class="row">
+    <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="input-group">
+            <input type="text" id="inputTextServer" class="form-control" placeholder="..." aria-label="Input group example" aria-describedby="btnGroupAddon">
+            <div class="input-group-text" id="btnGroupAddon">
+                <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnServer()">Filter Server</button>
+            </div>
+        </div>
+        <div class="input-group">
+            <input type="text" id="inputTextClient" class="form-control" placeholder="..." aria-label="Input group example" aria-describedby="btnGroupAddon">
+            <div class="input-group-text" id="btnGroupAddon">
+                <button class="btn btn-outline-secondary" type="button" id="filter" onclick="FilterOnClient()">Filter Client</button>
+            </div>
+        </div>
+        <div class="input-group">
+            <div class="input-group-text" id="btnGroupAddon">
+                <button class="btn btn-outline-secondary" id="saveChange" type="button">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table" id="productTable">
+    <thead>
+        <tr>
+            <th hidden>@Html.DisplayNameFor(model => model.ProductID)</th>
+            <th>@Html.DisplayNameFor(model => model.ProductName)</th>
+            <th>@Html.DisplayNameFor(model => model.Description)</th>
+            <th>@Html.DisplayNameFor(model => model.Rating)</th>
+            <th>@Html.DisplayNameFor(model => model.LastModified)</th>
+            <th>@Html.DisplayNameFor(model => model.ModifiedBy)</th>
+            <th>@Html.DisplayNameFor(model => model.Category.CategoryName)</th>
+            <th>@Html.DisplayNameFor(model => model.Inventory.ModifiedBy)</th>
+            <th>@Html.DisplayNameFor(model => model.Supplier.SupplierName)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td hidden>@Html.DisplayFor(modelItem => item.ProductID)</td>
+                <td>@Html.DisplayFor(modelItem => item.ProductName)</td>
+                <td contenteditable="true">@Html.DisplayFor(modelItem => item.Description)</td>
+                <td>@Html.DisplayFor(modelItem => item.Rating)</td>
+                <td>@Html.DisplayFor(modelItem => item.LastModified)</td>
+                <td>@Html.DisplayFor(modelItem => item.ModifiedBy)</td>
+                <td>@Html.DisplayFor(modelItem => item.Category.CategoryName)</td>
+                <td>@Html.DisplayFor(modelItem => item.Inventory.ModifiedBy)</td>
+                <td>@Html.DisplayFor(modelItem => item.Supplier.SupplierName)</td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.ProductID }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.ProductID }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.ProductID })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    function FilterOnServer() {
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("FilterDescription", "Products")',
+            data: { description: $('#inputTextServer').val() },
+            success: (response) => {
+                debugger;
+                $('#productTable tbody').empty();
+                if (response[0] !== undefined) {
+                    response.forEach((product) => {
+                        const row =
+                            `<tr>
+                                <td hidden>${product.ProductID || 'N/A'}</td>
+                                <td>${product.ProductName || 'N/A'}</td>
+                                <td>${product.Description || 'N/A'}</td>
+                                <td>${product.Rating || 'N/A'}</td>
+                                <td>${product.LastModified || 'N/A'}</td>
+                                <td>${product.ModifiedBy || 'N/A'}</td>
+                                <td>${product.Category ? product.Category.CategoryName : 'N/A'}</td>
+                                <td>${product.Inventory ? product.Inventory.ModifiedBy : 'N/A'}</td>
+                                <td>${product.Supplier ? product.Supplier.SupplierName : 'N/A'}</td>
+                                <td>
+                                    <a href="/Products/Edit/${product.ProductID}">Edit</a> |
+                                    <a href="/Products/Details/${product.ProductID}">Details</a> |
+                                    <a href="/Products/Delete/${product.ProductID}">Delete</a>
+                                </td>
+                            </tr>`;
+                        $('#productTable tbody').append(row);
+                    });
+                } else {
+                    const row = `<tr><td colspan="9" class="text-center">No products found</td></tr>`;
+                    $('#productTable tbody').append(row);
+                }
+            },
+            error: (error) => {
+                debugger;
+                console.error(error);
+            }
+        });
+    }
+
+    function FilterOnClient() {
+        const input = document.getElementById('inputTextClient');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('productTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length > 0) {
+                const descriptionCell = cells[2];
+                const descriptionText = descriptionCell.textContent || descriptionCell.innerText;
+
+                if (descriptionText.toLowerCase().indexOf(filter) > -1) {
+                    rows[i].style.display = ''; 
+                } else {
+                    rows[i].style.display = 'none'; 
+                }
+            }
+        }  
+    }
+
+    document.getElementById('saveChange').addEventListener('click',() => {
+        const table = document.getElementById('productTable');
+        const rows = table.getElementsByTagName('tr');
+        const modifiedRows = [];
+       
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length > 0) {
+                const productID = cells[0].textContent.trim();
+                const productName = cells[1].textContent.trim();
+                const description = cells[2].textContent.trim();
+                const price = cells[3].textContent.trim();
+              
+                if (description !== cells[1].getAttribute('data-original')) {
+                    modifiedRows.push({
+                        ProductID: productID,
+                        productName: productName,
+                        description: description,
+                        price: price
+                    });
+                }
+            }
+        }
+
+        if (modifiedRows.length > 0) {
+            saveChanges(modifiedRows);
+        } else {
+            alert('No se detectaron cambios.');
+        }
+    });
+
+    function saveChanges(modifiedRows) {
+        debugger;
+        fetch('/Products/EditList', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ products: modifiedRows })
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+

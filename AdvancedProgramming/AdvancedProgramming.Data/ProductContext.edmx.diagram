@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="f1faa8c498c64898980ae0d6c8a9765b" Name="Diagram1">
+        <EntityTypeShape EntityType="ProductDBModel.Category" Width="1.5" PointX="2.75" PointY="4.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.Product" Width="1.5" PointX="5" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.Role" Width="1.5" PointX="0.75" PointY="1.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.Supplier" Width="1.5" PointX="2.75" PointY="9" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.Task" Width="1.5" PointX="5.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.UserRole" Width="1.5" PointX="3" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="ProductDBModel.User" Width="1.5" PointX="0.75" PointY="5" IsExpanded="true" />
+        <AssociationConnector Association="ProductDBModel.FK__Products__Catego__3C69FB99" ManuallyRouted="false" />
+        <AssociationConnector Association="ProductDBModel.FK__Products__Suppli__3B75D760" ManuallyRouted="false" />
+        <AssociationConnector Association="ProductDBModel.FK__UserRoles__RoleI__5165187F" ManuallyRouted="false" />
+        <AssociationConnector Association="ProductDBModel.FK__UserRoles__UserI__5070F446" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
